@@ -5,10 +5,10 @@ import argparse
 from pathlib import Path
 
 # Initialize argument parser
-parser = argparse.ArgumentParser(description='Process text files using OpenAI API.')
+parser = argparse.ArgumentParser(description='Process files using OpenAI API.')
 parser.add_argument('--f', type=str, help='Processing path', default='./txt')
 parser.add_argument('--o', type=str, help='Output path', default='./out')
-parser.add_argument('--m', type=str, help='Mode for file extension and prompt', default='res')
+parser.add_argument('--m', type=str, help='Mode config.json', default='openai')
 parser.add_argument('--i', type=str, help='Input file type', default='txt')
 parser.add_argument('--l', type=str, help='Output language', default='english')
 
