@@ -1,0 +1,38 @@
+{
+    "default": {
+        "temperature": "0",
+        "max_tokens": "2800",
+        "top_p": "1",
+        "frequency_penalty": "0",
+        "presence_penalty": "0",
+        "api_key": "sk-",
+        "encoding": "utf-8",
+        "engine": "gpt-3.5-turbo"
+    },
+    "modes": {
+        "ent": {
+            "prompt": "Please perform the following operations: 1. Identify and extract important entities present in a given text, considering the following types of entities: - Dates - Locations - Key terms - People - Organizations 2. Perform a deep semantic analysis of each identified entity to understand its context within the text. 3. Classify the identified named entities, grouping them into corresponding categories (for example, all people together, all organizations together, etc.). 4. Generate a single file in CSV format as output. This file must have the following columns: - Entity: The exact text of the entity as it appears in the text. - Entity Type: The category of the entity (for example, person, date, location, etc.). - Context: A short fragment of text surrounding the entity, providing context for how it is used in the text. - Semantic analysis: A detailed analysis of the entity, exploring its meaning and relevance in the context of the text: \n",
+            "file_extension": "ent"
+        },
+        "sum": {
+            "prompt": "Please make a synthesis of the text provided, making sure to maintain the author's original style. Pay attention to the following guidelines: 1. Preserve the tone and style of the original text. 2. Highlight the main ideas and crucial points. 3. Make sure the summary is coherent and flows naturally, as if it were a more concise version written by the same author: \n",
+            "file_extension": "sum"
+        },
+        "ssm": {
+            "prompt": "Add SSML tags to make the text more understandable and pleasing when processed by a TTS engine:\n",
+            "file_extension": "ssm"
+        },
+        "dla": {
+            "prompt": "Discover the main themes or themes within the text using the Latent Dirichlet Allocation (LDA) technique in this text: \n",
+            "file_extension": "dla"
+        },
+        "que": {
+            "prompt": "Analyze the text provided and create questions that: 1. Relate directly to the central topic. 2. Foster a deeper understanding of the content. 3. Avoid yes or no answers. Please include comprehension, analytical, and application questions to cover various aspects of the text: \n",
+            "file_extension": "que"
+        },
+        "map": {
+            "prompt": "Discover the main themes or themes within the text using the Latent Dirichlet Allocation (LDA) technique in this text: \n",
+            "file_extension": "map"
+        }
+    }
+}
