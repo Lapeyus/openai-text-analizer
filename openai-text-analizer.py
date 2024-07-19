@@ -1,5 +1,4 @@
 from openai import OpenAI
-
 import json
 import os
 import argparse
@@ -45,14 +44,13 @@ for text_file in process_path.glob(f'*.{input_file_type}'):
     with open(text_file, 'r', encoding=file_encoding) as file:
         text_content = file.read()
 
-    output_file = output_path / text_file.with_suffix(f'.{mode}').name
+    file_extension = config.get('modes', {}).get(mode, {}).get('file_extension', 'txt')
+    output_file = output_path / text_file.with_suffix(f'.{file_extension}').name
 
     if output_file.exists():
         print(f'The file {output_file} already exists, skipping...')
         continue
 
-    # Split the text content if it exceeds the token limit
-    # max_input_tokens = 4096 - int(config['default']['max_tokens'])  # Assuming gpt-4 token limit is 4096
     max_input_tokens = int(config['default']['max_tokens'])
     text_chunks = [text_content[i:i + max_input_tokens] for i in range(0, len(text_content), max_input_tokens)]
 
@@ -62,7 +60,7 @@ for text_file in process_path.glob(f'*.{input_file_type}'):
         messages = [
             {
                 'role': 'system',
-                'content': config.get('modes', {}).get(mode, {}).get('prompt', '') + " Please don't add outro or intro to your response and reply using this language: " + output_language
+                'content': f"{config.get('modes', {}).get(mode, {}).get('prompt', '')} Please don't add outro or intro to your response and reply using this language: {output_language}"
             },
             {
                 'role': 'user',
@@ -71,13 +69,15 @@ for text_file in process_path.glob(f'*.{input_file_type}'):
         ]
 
         try:
-            response = client.chat.completions.create(model=config['default']['engine'],
-                                                      messages=messages,
-                                                      temperature=float(config['default']['temperature']),
-                                                      max_tokens=int(config['default']['max_tokens']),
-                                                      top_p=float(config['default']['top_p']),
-                                                      frequency_penalty=float(config['default']['frequency_penalty']),
-                                                      presence_penalty=float(config['default']['presence_penalty']))
+            response = client.chat.completions.create(
+                model=config['default']['engine'],
+                messages=messages,
+                temperature=float(config['default']['temperature']),
+                max_tokens=max_input_tokens,
+                top_p=float(config['default']['top_p']),
+                frequency_penalty=float(config['default']['frequency_penalty']),
+                presence_penalty=float(config['default']['presence_penalty'])
+            )
             ssml_text += response.choices[0].message.content + '\n'
         except Exception as e:
             print(f'Error: {e}')
