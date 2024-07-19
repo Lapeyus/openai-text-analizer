@@ -1,4 +1,5 @@
-import openai
+from openai import OpenAI
+
 import json
 import os
 import argparse
@@ -21,7 +22,7 @@ with open('config.json', 'r') as file:
 
 # Set OpenAI API key from environment or config
 api_key = os.environ.get('OPENAI_API_KEY', config.get('api_key', ''))
-openai.api_key = api_key
+client = OpenAI(api_key=api_key)
 
 # Validate and set paths, mode, and language
 process_path = Path(args.f)
@@ -36,8 +37,11 @@ file_encoding = config['default'].get('encoding', 'utf-8')
 process_path.mkdir(parents=True, exist_ok=True)
 output_path.mkdir(parents=True, exist_ok=True)
 
+print(f'Processing files in {process_path} and outputting to {output_path}')
+
 # Iterate through the text files and process them
 for text_file in process_path.glob(f'*.{input_file_type}'):
+    print(f'Processing file: {text_file}')
     with open(text_file, 'r', encoding=file_encoding) as file:
         text_content = file.read()
 
@@ -47,31 +51,37 @@ for text_file in process_path.glob(f'*.{input_file_type}'):
         print(f'The file {output_file} already exists, skipping...')
         continue
 
-    messages = [
-        {
-            'role': 'system',
-            'content': config.get('modes', {}).get(mode, {}).get('prompt', '') + " Please don't add outro or intro to your response and reply using this language: " + output_language
-        },
-        {
-            'role': 'user',
-            'content': text_content
-        }
-    ]
+    # Split the text content if it exceeds the token limit
+    # max_input_tokens = 4096 - int(config['default']['max_tokens'])  # Assuming gpt-4 token limit is 4096
+    max_input_tokens = int(config['default']['max_tokens'])
+    text_chunks = [text_content[i:i + max_input_tokens] for i in range(0, len(text_content), max_input_tokens)]
 
-    try:
-        response = openai.ChatCompletion.create(
-            model=config['default']['engine'],
-            messages=messages,
-            temperature=float(config['default']['temperature']),
-            max_tokens=int(config['default']['max_tokens']),
-            top_p=float(config['default']['top_p']),
-            frequency_penalty=float(config['default']['frequency_penalty']),
-            presence_penalty=float(config['default']['presence_penalty'])
-        )
-        ssml_text = response['choices'][0]['message']['content']
-    except Exception as e:
-        print(f'Error: {e}')
-        continue
+    ssml_text = ''
+    for idx, chunk in enumerate(text_chunks):
+        print(f'Processing chunk {idx + 1} of {len(text_chunks)}')
+        messages = [
+            {
+                'role': 'system',
+                'content': config.get('modes', {}).get(mode, {}).get('prompt', '') + " Please don't add outro or intro to your response and reply using this language: " + output_language
+            },
+            {
+                'role': 'user',
+                'content': chunk
+            }
+        ]
+
+        try:
+            response = client.chat.completions.create(model=config['default']['engine'],
+                                                      messages=messages,
+                                                      temperature=float(config['default']['temperature']),
+                                                      max_tokens=int(config['default']['max_tokens']),
+                                                      top_p=float(config['default']['top_p']),
+                                                      frequency_penalty=float(config['default']['frequency_penalty']),
+                                                      presence_penalty=float(config['default']['presence_penalty']))
+            ssml_text += response.choices[0].message.content + '\n'
+        except Exception as e:
+            print(f'Error: {e}')
+            continue
 
     with open(output_file, 'w', encoding=file_encoding) as file:
         file.write(ssml_text)
