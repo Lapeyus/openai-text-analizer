@@ -1,0 +1,35 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    target-branch: "main"
+    assignees:
+      - "github_username"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    reviewers:
+      - "reviewer_github_username"
+    labels:
+      - "dependencies"
+      - "automated"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    target-branch: "main"
+    assignees:
+      - "github_username"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    reviewers:
+      - "reviewer_github_username"
+    labels:
+      - "dependencies"
+      - "automated"
