@@ -32,7 +32,7 @@ html_template = """<!DOCTYPE html>
           colorFreezeLevel: 3
         ---
 
-{content}
+{content} 
 
       </script>
     </div>

@@ -23,17 +23,42 @@ html_template = """<!DOCTYPE html>
       .pane {{
         height: 100vh;
         overflow-y: auto;
-        padding: 10px;
       }}
       .processed {{
-        width: 70%;
+        flex-basis: 70%;
         background-color: #f9f9f9;
+        position: relative;
       }}
       .raw {{
-        width: 30%;
+        flex-basis: 30%;
         background-color: #fff;
         border-left: 1px solid #ddd;
         font-family: monospace;
+      }}
+      .resizer {{
+        width: 5px;
+        background: #ddd;
+        cursor: col-resize;
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 10;
+      }}
+      iframe {{
+        width: 100%;
+        height: 100%;
+        border: none;
+      }}
+      .tab-buttons {{
+        display: flex;
+        gap: 5px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+      }}
+      .tab-buttons button {{
+        cursor: pointer;
+        padding: 5px 10px;
       }}
       .tab {{
         display: none;
@@ -42,27 +67,78 @@ html_template = """<!DOCTYPE html>
       .tab-content {{
         display: block;
       }}
-      .tab-buttons {{
-        display: flex;
-        gap: 5px;
-        margin-bottom: 10px;
-      }}
-      .tab-buttons button {{
-        cursor: pointer;
-        padding: 5px 10px;
-      }}
-      iframe {{
-        width: 100%;
-        height: 100%;
-        border: none;
-      }}
       pre {{
         white-space: pre-wrap;
         word-wrap: break-word;
       }}
+
+      /* Responsive Design for Mobile */
+      @media screen and (max-width: 768px) {{
+        body {{
+          flex-direction: column;
+        }}
+        .processed,
+        .raw {{
+          flex-basis: 100%;
+          border-left: none;
+        }}
+        .resizer {{
+          width: 100%;
+          height: 5px;
+          cursor: row-resize;
+          position: absolute;
+          right: 0;
+          bottom: 0;
+          left: 0;
+        }}
+      }}
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.17"></script>
     <script>
+      document.addEventListener("DOMContentLoaded", () => {{
+        const resizer = document.querySelector(".resizer");
+        const processed = document.querySelector(".processed");
+        const raw = document.querySelector(".raw");
+        let isResizing = false;
+
+        // Event listeners for resizing
+        resizer.addEventListener("mousedown", (e) => {{
+          isResizing = true;
+          document.body.style.cursor = "col-resize";
+          document.addEventListener("mousemove", resize);
+          document.addEventListener("mouseup", stopResize);
+        }});
+
+        function resize(e) {{
+          if (!isResizing) return;
+
+          // For mobile (vertical resizing)
+          if (window.innerWidth <= 768) {{
+            const containerHeight = window.innerHeight;
+            const newHeight = (e.clientY / containerHeight) * 100; // Convert to percentage
+            if (newHeight > 10 && newHeight < 90) {{
+              processed.style.flexBasis = `${{newHeight}}%`;
+              raw.style.flexBasis = `${{100 - newHeight}}%`;
+            }}
+          }} else {{
+            // For desktop (horizontal resizing)
+            const containerWidth = window.innerWidth;
+            const newWidth = (e.clientX / containerWidth) * 100; // Convert to percentage
+            if (newWidth > 10 && newWidth < 90) {{
+              processed.style.flexBasis = `${{newWidth}}%`;
+              raw.style.flexBasis = `${{100 - newWidth}}%`;
+            }}
+          }}
+        }}
+
+        function stopResize() {{
+          isResizing = false;
+          document.body.style.cursor = "default";
+          document.removeEventListener("mousemove", resize);
+          document.removeEventListener("mouseup", stopResize);
+        }}
+      }});
+
+      // Tab handling logic
       function openTab(event, tabName) {{
         var tabs = document.getElementsByClassName("tab");
         for (var i = 0; i < tabs.length; i++) {{
@@ -81,6 +157,7 @@ html_template = """<!DOCTYPE html>
   <body>
     <div class="pane processed">
       <iframe src="{processed_html_path}" title="Processed HTML Content"></iframe>
+      <div class="resizer"></div>
     </div>
 
     <div class="pane raw">
@@ -101,12 +178,10 @@ html_template = """<!DOCTYPE html>
       <div id="txt" class="tab">
         {txt_audio}
         <pre>{txt_content}</pre>
-        
       </div>
       <div id="summary" class="tab">
         {summary_audio}
         <pre>{summary_content}</pre>
-        
       </div>
       <div id="lda" class="tab">
         {lda_audio}
